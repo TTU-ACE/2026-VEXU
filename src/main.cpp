@@ -1,25 +1,31 @@
 #include "main.h"
+#include "subsystems.hpp"
+#include "robot.hpp"
 
 /////
 // For installation, upgrading, documentations, and tutorials, check out our website!
 // https://ez-robotics.github.io/EZ-Template/
 /////
 
+Robot pb;
+
 // Chassis constructor - keeping original for autonomous usage
 ez::Drive chassis(
     // These are your drive motors, the first motor is used for sensing!
-    {1, 2 },     // Left Chassis Ports (negative port will reverse it!)
-    {-3, -4},    // Right Chassis Ports (negative port will reverse it!)
+    {15, -17, -3, 7},     // Left Chassis Ports (negative port will reverse it!)
+    {-13, 16, 5, -6},    // Right Chassis Ports (negative port will reverse it!)
 
-    7,      // IMU Port
+    14,      // IMU Port
     4.125,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
     343);   // Wheel RPM = cartridge * (motor gear / wheel gear)
 
 // Mecanum drive motors - individual control for each wheel
-pros::Motor front_left(1);     // Front left motor port
-pros::Motor front_right(2);    // Front right motor port  
-pros::Motor back_left(3);      // Back left motor port
-pros::Motor back_right(4);     // Back right motor port
+pros::MotorGroup front_left({17, -15});     // Front left motor group
+pros::MotorGroup front_right({13, -16});    // Front right motor group  
+pros::MotorGroup back_left({-3, 7});      // Back left motor group
+pros::MotorGroup back_right({5, -6});     // Back right motor group
+//back_right is off DO NOT TOUCH IT, thats the way it wants to be...
+
 
 // Controller
 pros::Controller master(pros::E_CONTROLLER_MASTER);
@@ -36,8 +42,8 @@ void mecanum_drive_init() {
 
   // Configure motor directions for mecanum drive
   // Adjust these based on your robot's motor orientation
-  front_right.set_reversed(true);  // Typically reverse right side
-  back_right.set_reversed(true);   // Typically reverse right side
+  //front_right.set_reversed(true);  // Typically reverse right side
+  //back_right.set_reversed(true);   // Typically reverse right side
   
   // Optional: Set motor gear ratio if using different cartridges
   // front_left.set_gearing(pros::E_MOTOR_GEARSET_18);  // Example: 200 RPM cartridge
@@ -346,7 +352,7 @@ void opcontrol() {
     // }
 
     // Use the helper function to set mecanum drive powers
-    mecanum_drive_set(drive, strafe, turn);
+    mecanum_drive_set(drive, -strafe, -turn);
 
     // Control options with controller buttons
     // Toggle between tank drive and mecanum drive
@@ -379,6 +385,13 @@ void opcontrol() {
     if (front_left.get_temperature() > 55 || front_right.get_temperature() > 55 ||
         back_left.get_temperature() > 55 || back_right.get_temperature() > 55) {
         master.rumble("---");  // Warning rumble if motors are getting hot
+    }
+
+    if (master.get_digital(DIGITAL_Y)) {
+      pb.intake_alliance(40);
+    }
+    else {
+      pb.intake_alliance(0);
     }
 
     pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME

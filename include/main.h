@@ -45,7 +45,10 @@
 
 // More includes here...
 #include "autons.hpp"
-#include "subsystems.hpp"
+#include "robot.hpp"
+
+// Global alias so existing auton code can continue to use `chassis`
+extern ez::Drive &chassis;
 
 
 /**

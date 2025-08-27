@@ -1,13 +1,28 @@
-//#ifndef ROBOT_HPP
-//#define ROBOT_HPP
+#ifndef ROBOT_HPP
+#define ROBOT_HPP
 
 #include "api.h"
+#include "EZ-Template/api.hpp"
 #include <iostream>
 
 
 class Robot {
     public:
         Robot();
+
+        // mecanum drive groups and controller
+        pros::MotorGroup front_left;   // {17, -15}
+        pros::MotorGroup front_right;  // {13, -16}
+        pros::MotorGroup back_left;    // {-3, 7}
+        pros::MotorGroup back_right;   // {5, -6}
+        pros::Controller master{pros::E_CONTROLLER_MASTER};
+
+        // EZ-Template chassis (kept as a member for composition)
+        ez::Drive chassis;
+
+        // mechanum helpers
+        void drive_mecanum_init();
+        void drive_mecanum_set(double drive, double strafe, double turn);
 
         //motors
         pros::Motor intake_motor;
@@ -21,12 +36,15 @@ class Robot {
         pros::adi::Pneumatics hood;
 
         //sensors
+        pros::Optical color_sensor_front;
+        pros::Optical color_sensor_back;
+        pros::Imu imu; // main IMU used for field-centric etc.
 
         //init tasks
         void pop_hood();
 
         //sensing
-        void color_sense();
+        pros::Color get_color(pros::Optical sensor);
 
         //intaking
         void intake_alliance(double speed);
@@ -43,10 +61,7 @@ class Robot {
     private:
 
         bool hoodPopped; //is the hood up
-
-
-
 };
 
 
-//#endif
+#endif

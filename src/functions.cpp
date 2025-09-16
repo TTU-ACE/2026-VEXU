@@ -34,10 +34,6 @@ Robot::Robot()
     color_sensor_back.set_led_pwm(100);
 }
 
-void color_sense() {
-
-}
-
 void Robot::intake_alliance(double speed) {
     //all move towards the center basket
     //TODO match directions
@@ -96,7 +92,7 @@ pros::Color Robot::get_color(pros::Optical sensor) {
     double saturation = sensor.get_saturation();
     double brightness = sensor.get_brightness();
 
-    double red_saturation_threshold = 0.3;
+    double red_saturation_threshold = 0.4;
     double blue_saturation_threshold = 0.3;
     
     // Color reference: https://kb.vex.com/hc/en-us/articles/360051005291-Using-the-Optical-Sensor-with-VEX-V5

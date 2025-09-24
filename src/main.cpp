@@ -8,19 +8,22 @@
 // Chassis constructor - keeping original for autonomous usage
 ez::Drive chassis(
     // These are your drive motors, the first motor is used for sensing!
-    {1, 2 },     // Left Chassis Ports (negative port will reverse it!)
-    {-3, -4},    // Right Chassis Ports (negative port will reverse it!)
+    {15, 17, 3, -7 },     // Left Chassis Ports (negative port will reverse it!)
+    {13, 16, 5, -6},    // Right Chassis Ports (negative port will reverse it!)
 
     7,      // IMU Port
     4.125,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
     343);   // Wheel RPM = cartridge * (motor gear / wheel gear)
 
 // Mecanum drive motors - individual control for each wheel
-pros::Motor front_left(1);     // Front left motor port
-pros::Motor front_right(2);    // Front right motor port  
-pros::Motor back_left(3);      // Back left motor port
-pros::Motor back_right(4);     // Back right motor port
-
+pros::Motor front_left(15);
+pros::Motor front_left2(17);     // Front left motor port
+pros::Motor front_right(2);
+pros::Motor front_right2(16);    // Front right motor port  
+pros::Motor back_left(7);
+pros::Motor back_left2(3); 
+pros::Motor back_right(5);
+pros::Motor back_right2(6);     // Back left motor port
 // Controller
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
@@ -30,14 +33,20 @@ pros::Controller master(pros::E_CONTROLLER_MASTER);
 void mecanum_drive_init() {
   // Set brake modes
   front_left.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+  front_left2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
   front_right.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+  front_right2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
   back_left.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+  back_left2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
   back_right.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+  back_right2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 
   // Configure motor directions for mecanum drive
   // Adjust these based on your robot's motor orientation
-  front_right.set_reversed(true);  // Typically reverse right side
-  back_right.set_reversed(true);   // Typically reverse right side
+  front_right.set_reversed(true);
+  front_right2.set_reversed(true);  // Typically reverse right side
+  back_right.set_reversed(true);
+  back_right2.set_reversed(true);  // Typically reverse right side
   
   // Optional: Set motor gear ratio if using different cartridges
   // front_left.set_gearing(pros::E_MOTOR_GEARSET_18);  // Example: 200 RPM cartridge
@@ -53,31 +62,47 @@ void mecanum_drive_init() {
 void mecanum_drive_set(double drive, double strafe, double turn) {
   // Calculate mecanum wheel powers using standard mecanum math
   double front_left_power = drive + strafe + turn;
+  double front_left2_power = drive + strafe + turn;
   double front_right_power = drive - strafe - turn;
+  double front_right2_power = drive - strafe - turn;
   double back_left_power = drive - strafe + turn;
+  double back_left2_power = drive - strafe + turn;
   double back_right_power = drive + strafe - turn;
+  double back_right2_power = drive + strafe - turn;
 
   // Find the maximum absolute value to normalize if needed
   double max_power = std::max({
       std::abs(front_left_power),
+      std::abs(front_left2_power),
       std::abs(front_right_power),
+      std::abs(front_right2_power),
       std::abs(back_left_power),
-      std::abs(back_right_power)
+      std::abs(back_left2_power),
+      std::abs(back_right_power),
+      std::abs(back_right2_power)
   });
 
   // Normalize powers if any exceed 127 (VEX motor range)
   if (max_power > 127) {
       front_left_power = (front_left_power / max_power) * 127;
+      front_left2_power = (front_left2_power / max_power) * 127;  
       front_right_power = (front_right_power / max_power) * 127;
+      front_right2_power = (front_right2_power / max_power) * 127;  
       back_left_power = (back_left_power / max_power) * 127;
+      back_left2_power = (back_left2_power / max_power) * 127;
       back_right_power = (back_right_power / max_power) * 127;
+      back_right2_power = (back_right2_power / max_power) * 127;  
   }
 
   // Set motor velocities
   front_left.move(front_left_power);
+  front_left2.move(front_left2_power);
   front_right.move(front_right_power);
+  front_right2.move(front_right2_power);
   back_left.move(back_left_power);
+  back_left2.move(back_left2_power);
   back_right.move(back_right_power);
+  back_right2.move(back_right2_power);
 }
 
 // Uncomment the trackers you're using here!

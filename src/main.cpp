@@ -382,6 +382,30 @@ void opcontrol() {
         continue;  // Skip the rest of this loop iteration
     }
 
+    // Press the D-Pad to control one wheel at a time
+    /*
+        ^ = Front Right
+        > = Back Right
+        v = Back Left
+        < = Front Left
+    */
+   if (master.get_digital_new_press(DIGITAL_UP)){ // Spins the front right wheel
+    front_right.move_velocity(-20);
+    front_right2.move_velocity(20);
+   }                                                 
+   if (master.get_digital_new_press(DIGITAL_RIGHT)){ // Spins the back right wheel
+    back_right.move_velocity(20);
+    back_right2.move_velocity(-20);
+   }
+   if (master.get_digital_new_press(DIGITAL_DOWN)){ // Spins the back left wheel
+    back_left.move_velocity(-20);
+    back_left2.move_velocity(20);
+   }
+   if (master.get_digital_new_press(DIGITAL_LEFT)){ // Spins the front left wheel
+    front_left.move_velocity(20);
+    front_left2.move_velocity(-20);
+   }
+
     // Optional: Toggle field-centric mode
     // if (master.get_digital_new_press(DIGITAL_Y)) {
     //     field_centric = !field_centric;

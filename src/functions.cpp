@@ -80,7 +80,15 @@ void Robot::score_teir3(double speed) {
 }
 
 void Robot::pop_hood() {
+    //etend
+    switch(hood.is_extended()) {
+        case false:
+            hood.extend();
+            break;
 
+        case true:
+            break;
+    }
 }
 
 

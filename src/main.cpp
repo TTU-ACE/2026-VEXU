@@ -116,6 +116,8 @@ void autonomous() {
   chassis.drive_sensor_reset();               // Reset drive sensors to 0
   chassis.odom_xyt_set(0_in, 0_in, 0_deg);    // Set the current position, you can start at a specific position with this
   chassis.drive_brake_set(MOTOR_BRAKE_HOLD);  // Set motors to hold.  This helps autonomous consistency
+ 
+  pb.pop_hood();                              // Raises score hood
 
   /*
   Odometry and Pure Pursuit are not magic
@@ -247,6 +249,10 @@ void ez_template_extras() {
 void opcontrol() {
   // Initialize mecanum drive motors
   pb.drive_mecanum_init();
+
+  // Checks hood and raises if down
+  pb.pop_hood();    
+
   
   // Optional: Initialize additional sensors for enhanced functionality
   // pros::Imu field_imu(7);  // Use IMU for field-centric drive
@@ -287,6 +293,43 @@ void opcontrol() {
 
     // Use the helper function to set mecanum drive powers
     pb.drive_mecanum_set(drive, -strafe, -turn);
+
+    // Toggle scraper in or out (RIGHT BUMPER)
+    bool extend= false;
+    if (pb.master.get_digital_new_press(DIGITAL_R1)){
+      bool extend = !extend;
+      pb.scraper_control(extend);
+    }
+
+    // Score Tier Control
+    // Control score tier with Right D-Pad (>)
+    int tier = 0;
+    if (pb.master.get_digital_new_press(DIGITAL_RIGHT)){
+      tier = pb.change_tier(tier);
+    }
+
+    // Picks tier to use
+    switch(tier){
+      case 0:
+        if (pb.master.get_digital_new_press(DIGITAL_R2)){
+          pb.extake(10);
+        }
+        break;
+
+      case 1: 
+        if (pb.master.get_digital_new_press(DIGITAL_R2)){
+          pb.score_teir2(10);
+        }
+        break;
+
+      case 2:
+        if (pb.master.get_digital_new_press(DIGITAL_R2)){
+          pb.score_teir3(10);
+        }
+        break;
+    }
+
+
 
     // Control options with controller buttons
     // Toggle between tank drive and mecanum drive

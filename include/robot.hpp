@@ -34,6 +34,7 @@ class Robot {
 
         //pneumatics
         pros::adi::Pneumatics hood;
+        pros::adi::Pneumatics scraper;
 
         //sensors
         pros::Optical color_sensor_front;
@@ -54,9 +55,11 @@ class Robot {
         void extake(double speed);
         void score_teir2 (double speed); 
         void score_teir3(double speed);
+        int change_tier(int tier);
 
         //future
         //function to grab from pipe thing
+        void scraper_control(bool extended);
 
     private:
 

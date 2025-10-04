@@ -10,7 +10,7 @@ class Robot {
     public:
         Robot();
 
-        // mecanum drive groups and controller
+        // drive motor groups and controller
         pros::MotorGroup front_left;   // {17, -15}
         pros::MotorGroup front_right;  // {13, -16}
         pros::MotorGroup back_left;    // {-3, 7}
@@ -19,10 +19,6 @@ class Robot {
 
         // EZ-Template chassis (kept as a member for composition)
         ez::Drive chassis;
-
-        // mechanum helpers
-        void drive_mecanum_init();
-        void drive_mecanum_set(double drive, double strafe, double turn);
 
         //motors
         pros::Motor intake_motor;

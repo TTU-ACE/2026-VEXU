@@ -9,7 +9,7 @@ Robot pb;
 // Global alias to keep existing code (autons, etc.) working
 ez::Drive &chassis = pb.chassis;
 
-// Mecanum helpers now live in Robot
+// Removed old mecanum helpers; using EZ-Template drive interface
 
 // Uncomment the trackers you're using here!
 // - `8` and `9` are smart ports (making these negative will reverse the sensor)
@@ -244,75 +244,12 @@ void ez_template_extras() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-  // Initialize mecanum drive motors
-  pb.drive_mecanum_init();
-  
-  // Optional: Initialize additional sensors for enhanced functionality
-  // pros::Imu field_imu(7);  // Use IMU for field-centric drive
-  // bool field_centric = false;  // Toggle for field-centric vs robot-centric
-
   while (true) {
     // Gives you some extras to make EZ-Template ezier
     ez_template_extras();
 
-    // Mecanum Drive Implementation
-    // Get controller inputs (-127 to 127 range)
-    double drive = -pb.master.get_analog(ANALOG_LEFT_Y);    // Forward/backward (negative for correct direction)
-    double strafe = pb.master.get_analog(ANALOG_LEFT_X);    // Left/right strafe
-    double turn = pb.master.get_analog(ANALOG_RIGHT_X);     // Rotation
-
-    // Apply deadzone to prevent drift
-    int deadzone = 10;
-    if (abs(drive) < deadzone) drive = 0;
-    if (abs(strafe) < deadzone) strafe = 0;
-    if (abs(turn) < deadzone) turn = 0;
-
-    // Scale inputs for better control (adjust these values as needed)
-    double drive_scale = 0.8;   // Reduce max speed if needed
-    double strafe_scale = 0.8;  // Strafe scaling
-    double turn_scale = 0.6;    // Typically want turning to be slower
-    
-    drive *= drive_scale;
-    strafe *= strafe_scale;
-    turn *= turn_scale;
-
-    // Optional: Field-centric drive using IMU
-    // if (field_centric && chassis.drive_imu_calibrated()) {
-    //   double robot_angle = chassis.drive_imu_get() * M_PI / 180.0;  // Convert to radians
-    //   double temp = drive * cos(robot_angle) + strafe * sin(robot_angle);
-    //   strafe = -drive * sin(robot_angle) + strafe * cos(robot_angle);
-    //   drive = temp;
-    // }
-
-    // Use the helper function to set mecanum drive powers
-    pb.drive_mecanum_set(drive, -strafe, -turn);
-
-    // Control options with controller buttons
-    // Toggle between tank drive and mecanum drive
-    if (pb.master.get_digital_new_press(DIGITAL_X)) {
-        // Switch to EZ-Template tank drive for precise autonomous-like movements
-        chassis.opcontrol_tank();
-        pros::delay(20);  // Brief delay to prevent conflicts
-        continue;  // Skip the rest of this loop iteration
-    }
-
-    // Optional: Toggle field-centric mode
-    // if (pb.master.get_digital_new_press(DIGITAL_Y)) {
-    //     field_centric = !field_centric;
-    //     pb.master.rumble(".");  // Short rumble to confirm toggle
-    // }
-
-    // Emergency stop
-    if (pb.master.get_digital(DIGITAL_DOWN) && pb.master.get_digital(DIGITAL_B)) {
-        pb.drive_mecanum_set(0, 0, 0);  // Stop all movement
-    }
-
-    // Optional: Display debug information on brain screen
-    if (pb.master.get_digital_new_press(DIGITAL_A)) {
-        pros::lcd::print(0, "Mecanum Drive Active");
-        pros::lcd::print(1, "Drive: %.0f Strafe: %.0f Turn: %.0f", drive, strafe, turn);
-        pros::lcd::print(2, "Press X for Tank Drive");
-    }
+    // Arcade drive using EZ-Template (choose SINGLE for one-stick or SPLIT for two-stick)
+    chassis.opcontrol_arcade_standard(ez::SINGLE);
 
     // Motor temperature monitoring (safety feature)
     if (pb.front_left.get_temperature() > 55 || pb.front_right.get_temperature() > 55 ||

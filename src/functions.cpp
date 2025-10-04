@@ -110,30 +110,4 @@ pros::Color Robot::get_color(pros::Optical sensor) {
     }
 }
 
-// Mecanum helpers
-void Robot::drive_mecanum_init() {
-    front_left.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-    front_right.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-    back_left.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-    back_right.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-}
-
-void Robot::drive_mecanum_set(double drive, double strafe, double turn) {
-    double fl = drive + strafe + turn;
-    double fr = drive - strafe - turn;
-    double bl = drive - strafe + turn;
-    double br = drive + strafe - turn;
-
-    double max_power = std::max({std::abs(fl), std::abs(fr), std::abs(bl), std::abs(br)});
-    if (max_power > 127) {
-        fl = fl / max_power * 127;
-        fr = fr / max_power * 127;
-        bl = bl / max_power * 127;
-        br = br / max_power * 127;
-    }
-
-    front_left.move(fl);
-    front_right.move(fr);
-    back_left.move(bl);
-    back_right.move(br);
-}
+// Removed mecanum helpers; using EZ-Template arcade/tank control in opcontrol

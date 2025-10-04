@@ -22,6 +22,7 @@ Robot::Robot()
     top_roller(5),
 
     hood('a', false, false),
+    scraper('b', false, false),
 
     // Sensors
     color_sensor_front(13),
@@ -80,7 +81,41 @@ void Robot::score_teir3(double speed) {
 }
 
 void Robot::pop_hood() {
+    //extend
+    switch(hood.is_extended()) {
+        case false:
+            hood.extend();
+            break;
 
+        case true:
+            break;
+    }
+}
+
+void Robot::scraper_control(bool extended) {
+    // Extends the scraper on a toggle
+    switch(extended){
+        case true:
+            scraper.extend();
+            break;
+            
+        case false:
+            scraper.retract(); 
+            break;
+    }
+}
+
+int Robot::change_tier(int tier){
+    // Changes what tier the score system is using
+    tier++;
+
+    if(tier > 2){
+        tier = 0;
+    }
+
+    pros::lcd::print(3, "Tier Selected: %d", tier);
+
+    return tier;
 }
 
 

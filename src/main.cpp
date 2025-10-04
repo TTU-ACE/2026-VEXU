@@ -1,4 +1,5 @@
 #include "main.h"
+#include <robot.hpp>
 
 /////
 // For installation, upgrading, documentations, and tutorials, check out our website!
@@ -115,6 +116,8 @@ void autonomous() {
   chassis.drive_sensor_reset();               // Reset drive sensors to 0
   chassis.odom_xyt_set(0_in, 0_in, 0_deg);    // Set the current position, you can start at a specific position with this
   chassis.drive_brake_set(MOTOR_BRAKE_HOLD);  // Set motors to hold.  This helps autonomous consistency
+ 
+  pb.pop_hood();                              // Raises score hood
 
   /*
   Odometry and Pure Pursuit are not magic
@@ -244,12 +247,57 @@ void ez_template_extras() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
+
+  // Checks hood and raises if down
+  pb.pop_hood();    
+
+  
+  // Optional: Initialize additional sensors for enhanced functionality
+  // pros::Imu field_imu(7);  // Use IMU for field-centric drive
+  // bool field_centric = false;  // Toggle for field-centric vs robot-centric
+
   while (true) {
     // Gives you some extras to make EZ-Template ezier
     ez_template_extras();
 
     // Arcade drive using EZ-Template (choose SINGLE for one-stick or SPLIT for two-stick)
     chassis.opcontrol_arcade_standard(ez::SINGLE);
+
+
+    // Toggle scraper in or out (RIGHT BUMPER)
+    bool extend= false;
+    if (pb.master.get_digital_new_press(DIGITAL_R1)){
+      bool extend = !extend;
+      pb.scraper_control(extend);
+    }
+
+    // Score Tier Control
+    // Control score tier with Right D-Pad (>)
+    int tier = 0;
+    if (pb.master.get_digital_new_press(DIGITAL_RIGHT)){
+      tier = pb.change_tier(tier);
+    }
+
+    // Picks tier to use
+    switch(tier){
+      case 0:
+        if (pb.master.get_digital_new_press(DIGITAL_R2)){
+          pb.extake(10);
+        }
+        break;
+
+      case 1: 
+        if (pb.master.get_digital_new_press(DIGITAL_R2)){
+          pb.score_teir2(10);
+        }
+        break;
+
+      case 2:
+        if (pb.master.get_digital_new_press(DIGITAL_R2)){
+          pb.score_teir3(10);
+        }
+        break;
+    }
 
     // Motor temperature monitoring (safety feature)
     if (pb.front_left.get_temperature() > 55 || pb.front_right.get_temperature() > 55 ||

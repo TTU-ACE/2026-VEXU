@@ -9,8 +9,8 @@
 Robot pb;
 // Global alias to keep existing code (autons, etc.) working
 ez::Drive &chassis = pb.chassis;
+pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-// Removed old mecanum helpers; using EZ-Template drive interface
 
 // Uncomment the trackers you're using here!
 // - `8` and `9` are smart ports (making these negative will reverse the sensor)

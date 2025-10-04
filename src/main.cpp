@@ -271,33 +271,69 @@ void opcontrol() {
       pb.scraper_control(extend);
     }
 
+    // Press the D-Pad to control one wheel at a time
+    /*
+        ^ = Front Right
+        > = Back Right
+        v = Back Left
+        < = Front Left
+    */
+    if (master.get_digital_new_press(DIGITAL_UP)){ // Spins the front right wheel
+      pros::Motor(pb.front_right.get_port(0)).move_velocity(-20);
+      pros::Motor(pb.front_right.get_port(1)).move_velocity(20);
+
+      // front_right.move_velocity(-20);
+      // front_right2.move_velocity(20);
+    }                                                 
+    if (master.get_digital_new_press(DIGITAL_RIGHT)){ // Spins the back right wheel
+      pros::Motor(pb.back_right.get_port(0)).move_velocity(20);
+      pros::Motor(pb.back_right.get_port(1)).move_velocity(-20);
+      
+      // back_right.move_velocity(20);
+      // back_right2.move_velocity(-20);
+    }
+    if (master.get_digital_new_press(DIGITAL_DOWN)){ // Spins the back left wheel
+      pros::Motor(pb.back_left.get_port(0)).move_velocity(-20);
+      pros::Motor(pb.back_left.get_port(1)).move_velocity(20);
+
+      // back_left.move_velocity(-20);
+      // back_left2.move_velocity(20);
+    }
+    if (master.get_digital_new_press(DIGITAL_LEFT)){ // Spins the front left wheel
+      pros::Motor(pb.front_left.get_port(0)).move_velocity(20);
+      pros::Motor(pb.front_left.get_port(1)).move_velocity(-20);
+
+      // front_left.move_velocity(20);
+      // front_left2.move_velocity(-20);
+    }
+
     // Score Tier Control
     // Control score tier with Right D-Pad (>)
-    int tier = 0;
-    if (pb.master.get_digital_new_press(DIGITAL_RIGHT)){
-      tier = pb.change_tier(tier);
-    }
+    // int tier = 0;
+    // if (pb.master.get_digital_new_press(DIGITAL_RIGHT)){
+    //   tier = pb.change_tier(tier);
+    // }
 
-    // Picks tier to use
-    switch(tier){
-      case 0:
-        if (pb.master.get_digital_new_press(DIGITAL_R2)){
-          pb.extake(10);
-        }
-        break;
+    // // Picks tier to use
+    // switch(tier){
+    //   case 0:
+    //     if (pb.master.get_digital_new_press(DIGITAL_R2)){
+    //       pb.extake(10);
+    //     }
+    //     break;
 
-      case 1: 
-        if (pb.master.get_digital_new_press(DIGITAL_R2)){
-          pb.score_teir2(10);
-        }
-        break;
+    //   case 1: 
+    //     if (pb.master.get_digital_new_press(DIGITAL_R2)){
+    //       pb.score_teir2(10);
+    //     }
+    //     break;
 
-      case 2:
-        if (pb.master.get_digital_new_press(DIGITAL_R2)){
-          pb.score_teir3(10);
-        }
-        break;
-    }
+    //   case 2:
+    //     if (pb.master.get_digital_new_press(DIGITAL_R2)){
+    //       pb.score_teir3(10);
+    //     }
+    //     break;
+    // }
 
     // Motor temperature monitoring (safety feature)
     if (pb.front_left.get_temperature() > 55 || pb.front_right.get_temperature() > 55 ||

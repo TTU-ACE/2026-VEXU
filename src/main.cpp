@@ -1,109 +1,16 @@
 #include "main.h"
+#include <robot.hpp>
 
 /////
 // For installation, upgrading, documentations, and tutorials, check out our website!
 // https://ez-robotics.github.io/EZ-Template/
 /////
 
-// Chassis constructor - keeping original for autonomous usage
-ez::Drive chassis(
-    // These are your drive motors, the first motor is used for sensing!
-    {15, 17, 3, -7 },     // Left Chassis Ports (negative port will reverse it!)
-    {13, 16, 5, -6},    // Right Chassis Ports (negative port will reverse it!)
-
-    7,      // IMU Port
-    4.125,  // Wheel Diameter (Remember, 4" wheels without screw holes are actually 4.125!)
-    343);   // Wheel RPM = cartridge * (motor gear / wheel gear)
-
-// Mecanum drive motors - individual control for each wheel
-pros::Motor front_left(15);
-pros::Motor front_left2(17);     // Front left motor port
-pros::Motor front_right(2);
-pros::Motor front_right2(16);    // Front right motor port  
-pros::Motor back_left(7);
-pros::Motor back_left2(3); 
-pros::Motor back_right(5);
-pros::Motor back_right2(6);     // Back left motor port
-// Controller
+Robot pb;
+// Global alias to keep existing code (autons, etc.) working
+ez::Drive &chassis = pb.chassis;
 pros::Controller master(pros::E_CONTROLLER_MASTER);
 
-/**
- * Helper function to initialize mecanum drive motors
- */
-void mecanum_drive_init() {
-  // Set brake modes
-  front_left.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-  front_left2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-  front_right.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-  front_right2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-  back_left.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-  back_left2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-  back_right.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-  back_right2.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-
-  // Configure motor directions for mecanum drive
-  // Adjust these based on your robot's motor orientation
-  front_right.set_reversed(true);
-  front_right2.set_reversed(true);  // Typically reverse right side
-  back_right.set_reversed(true);
-  back_right2.set_reversed(true);  // Typically reverse right side
-  
-  // Optional: Set motor gear ratio if using different cartridges
-  // front_left.set_gearing(pros::E_MOTOR_GEARSET_18);  // Example: 200 RPM cartridge
-}
-
-/**
- * Helper function to set mecanum drive powers with normalization
- * 
- * @param drive Forward/backward movement (-127 to 127)
- * @param strafe Left/right movement (-127 to 127) 
- * @param turn Rotational movement (-127 to 127)
- */
-void mecanum_drive_set(double drive, double strafe, double turn) {
-  // Calculate mecanum wheel powers using standard mecanum math
-  double front_left_power = drive + strafe + turn;
-  double front_left2_power = drive + strafe + turn;
-  double front_right_power = drive - strafe - turn;
-  double front_right2_power = drive - strafe - turn;
-  double back_left_power = drive - strafe + turn;
-  double back_left2_power = drive - strafe + turn;
-  double back_right_power = drive + strafe - turn;
-  double back_right2_power = drive + strafe - turn;
-
-  // Find the maximum absolute value to normalize if needed
-  double max_power = std::max({
-      std::abs(front_left_power),
-      std::abs(front_left2_power),
-      std::abs(front_right_power),
-      std::abs(front_right2_power),
-      std::abs(back_left_power),
-      std::abs(back_left2_power),
-      std::abs(back_right_power),
-      std::abs(back_right2_power)
-  });
-
-  // Normalize powers if any exceed 127 (VEX motor range)
-  if (max_power > 127) {
-      front_left_power = (front_left_power / max_power) * 127;
-      front_left2_power = (front_left2_power / max_power) * 127;  
-      front_right_power = (front_right_power / max_power) * 127;
-      front_right2_power = (front_right2_power / max_power) * 127;  
-      back_left_power = (back_left_power / max_power) * 127;
-      back_left2_power = (back_left2_power / max_power) * 127;
-      back_right_power = (back_right_power / max_power) * 127;
-      back_right2_power = (back_right2_power / max_power) * 127;  
-  }
-
-  // Set motor velocities
-  front_left.move(front_left_power);
-  front_left2.move(front_left2_power);
-  front_right.move(front_right_power);
-  front_right2.move(front_right2_power);
-  back_left.move(back_left_power);
-  back_left2.move(back_left2_power);
-  back_right.move(back_right_power);
-  back_right2.move(back_right2_power);
-}
 
 // Uncomment the trackers you're using here!
 // - `8` and `9` are smart ports (making these negative will reverse the sensor)
@@ -167,7 +74,7 @@ void initialize() {
   // Initialize chassis and auton selector
   chassis.initialize();
   ez::as::initialize();
-  master.rumble(chassis.drive_imu_calibrated() ? "." : "---");
+  pb.master.rumble(chassis.drive_imu_calibrated() ? "." : "---");
 }
 
 /**
@@ -209,6 +116,8 @@ void autonomous() {
   chassis.drive_sensor_reset();               // Reset drive sensors to 0
   chassis.odom_xyt_set(0_in, 0_in, 0_deg);    // Set the current position, you can start at a specific position with this
   chassis.drive_brake_set(MOTOR_BRAKE_HOLD);  // Set motors to hold.  This helps autonomous consistency
+ 
+  pb.pop_hood();                              // Raises score hood
 
   /*
   Odometry and Pure Pursuit are not magic
@@ -263,6 +172,14 @@ void ez_screen_task() {
           screen_print_tracker(chassis.odom_tracker_right, "r", 5);
           screen_print_tracker(chassis.odom_tracker_back, "b", 6);
           screen_print_tracker(chassis.odom_tracker_front, "f", 7);
+        }
+        else if (ez::as::page_blank_is_on(1)) {
+          pros::Color color = pb.get_color(pb.color_sensor_front);
+          std::string color_name = color == pros::Color::red ? "Red" : color == pros::Color::blue ? "Blue" : "Undefined";
+          ez::screen_print("Color: " + color_name, 1);
+          ez::screen_print("Hue: " + util::to_string_with_precision(pb.color_sensor_front.get_hue()), 2);
+          ez::screen_print("Saturation: " + util::to_string_with_precision(pb.color_sensor_front.get_saturation()), 3);
+          ez::screen_print("Brightness: " + util::to_string_with_precision(pb.color_sensor_front.get_brightness()), 4);
         }
       }
     }
@@ -330,8 +247,10 @@ void ez_template_extras() {
  * task, not resume it from where it left off.
  */
 void opcontrol() {
-  // Initialize mecanum drive motors
-  mecanum_drive_init();
+
+  // Checks hood and raises if down
+  pb.pop_hood();    
+
   
   // Optional: Initialize additional sensors for enhanced functionality
   // pros::Imu field_imu(7);  // Use IMU for field-centric drive
@@ -341,69 +260,92 @@ void opcontrol() {
     // Gives you some extras to make EZ-Template ezier
     ez_template_extras();
 
-    // Mecanum Drive Implementation
-    // Get controller inputs (-127 to 127 range)
-    double drive = -master.get_analog(ANALOG_LEFT_Y);    // Forward/backward (negative for correct direction)
-    double strafe = master.get_analog(ANALOG_LEFT_X);    // Left/right strafe
-    double turn = master.get_analog(ANALOG_RIGHT_X);     // Rotation
+    // Arcade drive using EZ-Template (choose SINGLE for one-stick or SPLIT for two-stick)
+    chassis.opcontrol_arcade_standard(ez::SINGLE);
 
-    // Apply deadzone to prevent drift
-    int deadzone = 10;
-    if (abs(drive) < deadzone) drive = 0;
-    if (abs(strafe) < deadzone) strafe = 0;
-    if (abs(turn) < deadzone) turn = 0;
 
-    // Scale inputs for better control (adjust these values as needed)
-    double drive_scale = 0.8;   // Reduce max speed if needed
-    double strafe_scale = 0.8;  // Strafe scaling
-    double turn_scale = 0.6;    // Typically want turning to be slower
-    
-    drive *= drive_scale;
-    strafe *= strafe_scale;
-    turn *= turn_scale;
+    // Toggle scraper in or out (RIGHT BUMPER)
+    bool extend= false;
+    if (pb.master.get_digital_new_press(DIGITAL_R1)){
+      bool extend = !extend;
+      pb.scraper_control(extend);
+    }
 
-    // Optional: Field-centric drive using IMU
-    // if (field_centric && chassis.drive_imu_calibrated()) {
-    //   double robot_angle = chassis.drive_imu_get() * M_PI / 180.0;  // Convert to radians
-    //   double temp = drive * cos(robot_angle) + strafe * sin(robot_angle);
-    //   strafe = -drive * sin(robot_angle) + strafe * cos(robot_angle);
-    //   drive = temp;
+    // Press the D-Pad to control one wheel at a time
+    /*
+        ^ = Front Right
+        > = Back Right
+        v = Back Left
+        < = Front Left
+    */
+    if (master.get_digital_new_press(DIGITAL_UP)){ // Spins the front right wheel
+      pros::Motor(pb.front_right.get_port(0)).move_velocity(-20);
+      pros::Motor(pb.front_right.get_port(1)).move_velocity(20);
+
+      // front_right.move_velocity(-20);
+      // front_right2.move_velocity(20);
+    }                                                 
+    if (master.get_digital_new_press(DIGITAL_RIGHT)){ // Spins the back right wheel
+      pros::Motor(pb.back_right.get_port(0)).move_velocity(20);
+      pros::Motor(pb.back_right.get_port(1)).move_velocity(-20);
+      
+      // back_right.move_velocity(20);
+      // back_right2.move_velocity(-20);
+    }
+    if (master.get_digital_new_press(DIGITAL_DOWN)){ // Spins the back left wheel
+      pros::Motor(pb.back_left.get_port(0)).move_velocity(-20);
+      pros::Motor(pb.back_left.get_port(1)).move_velocity(20);
+
+      // back_left.move_velocity(-20);
+      // back_left2.move_velocity(20);
+    }
+    if (master.get_digital_new_press(DIGITAL_LEFT)){ // Spins the front left wheel
+      pros::Motor(pb.front_left.get_port(0)).move_velocity(20);
+      pros::Motor(pb.front_left.get_port(1)).move_velocity(-20);
+
+      // front_left.move_velocity(20);
+      // front_left2.move_velocity(-20);
+    }
+
+    // Score Tier Control
+    // Control score tier with Right D-Pad (>)
+    // int tier = 0;
+    // if (pb.master.get_digital_new_press(DIGITAL_RIGHT)){
+    //   tier = pb.change_tier(tier);
     // }
 
-    // Use the helper function to set mecanum drive powers
-    mecanum_drive_set(drive, strafe, turn);
+    // // Picks tier to use
+    // switch(tier){
+    //   case 0:
+    //     if (pb.master.get_digital_new_press(DIGITAL_R2)){
+    //       pb.extake(10);
+    //     }
+    //     break;
 
-    // Control options with controller buttons
-    // Toggle between tank drive and mecanum drive
-    if (master.get_digital_new_press(DIGITAL_X)) {
-        // Switch to EZ-Template tank drive for precise autonomous-like movements
-        chassis.opcontrol_tank();
-        pros::delay(20);  // Brief delay to prevent conflicts
-        continue;  // Skip the rest of this loop iteration
-    }
+    //   case 1: 
+    //     if (pb.master.get_digital_new_press(DIGITAL_R2)){
+    //       pb.score_teir2(10);
+    //     }
+    //     break;
 
-    // Optional: Toggle field-centric mode
-    // if (master.get_digital_new_press(DIGITAL_Y)) {
-    //     field_centric = !field_centric;
-    //     master.rumble(".");  // Short rumble to confirm toggle
+    //   case 2:
+    //     if (pb.master.get_digital_new_press(DIGITAL_R2)){
+    //       pb.score_teir3(10);
+    //     }
+    //     break;
     // }
-
-    // Emergency stop
-    if (master.get_digital(DIGITAL_DOWN) && master.get_digital(DIGITAL_B)) {
-        mecanum_drive_set(0, 0, 0);  // Stop all movement
-    }
-
-    // Optional: Display debug information on brain screen
-    if (master.get_digital_new_press(DIGITAL_A)) {
-        pros::lcd::print(0, "Mecanum Drive Active");
-        pros::lcd::print(1, "Drive: %.0f Strafe: %.0f Turn: %.0f", drive, strafe, turn);
-        pros::lcd::print(2, "Press X for Tank Drive");
-    }
 
     // Motor temperature monitoring (safety feature)
-    if (front_left.get_temperature() > 55 || front_right.get_temperature() > 55 ||
-        back_left.get_temperature() > 55 || back_right.get_temperature() > 55) {
-        master.rumble("---");  // Warning rumble if motors are getting hot
+    if (pb.front_left.get_temperature() > 55 || pb.front_right.get_temperature() > 55 ||
+        pb.back_left.get_temperature() > 55 || pb.back_right.get_temperature() > 55) {
+        pb.master.rumble("---");  // Warning rumble if motors are getting hot
+    }
+
+    if (pb.master.get_digital(DIGITAL_Y)) {
+      pb.intake_alliance(40);
+    }
+    else {
+      pb.intake_alliance(0);
     }
 
     pros::delay(ez::util::DELAY_TIME);  // This is used for timer calculations!  Keep this ez::util::DELAY_TIME
